@@ -1,0 +1,12 @@
+node_modules/
+.next/
+.tmp/
+.cache/
+build/
+dist/
+.env
+.env.local
+backend-accessoires/public/uploads/*
+!backend-accessoires/public/uploads/.gitkeep
+*.log
+Capture d*.png

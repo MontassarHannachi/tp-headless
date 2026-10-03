@@ -1,0 +1,39 @@
+services:
+  strapi:
+    build: ./backend-accessoires
+    image: backend-accessoires
+    container_name: strapi
+    env_file: ./backend-accessoires/.env
+    environment:
+      HOST: 0.0.0.0
+      PORT: "1337"
+      DATABASE_CLIENT: sqlite
+      DATABASE_FILENAME: .tmp/data.db
+    ports:
+      - "1337:1337"
+    volumes:
+      - ./backend-accessoires/.tmp:/app/.tmp
+      - ./backend-accessoires/public/uploads:/app/public/uploads
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:1337/_health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend-vitrine
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:1337
+    image: frontend-vitrine
+    container_name: frontend
+    environment:
+      API_INTERNAL_URL: http://strapi:1337
+    ports:
+      - "3002:3000"
+    depends_on:
+      strapi:
+        condition: service_healthy
+    restart: unless-stopped
