@@ -26,13 +26,13 @@ services:
     build:
       context: ./frontend-vitrine
       args:
-        NEXT_PUBLIC_API_URL: http://localhost:1337
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:1337}
     image: frontend-vitrine
     container_name: frontend
     environment:
       API_INTERNAL_URL: http://strapi:1337
     ports:
-      - "3002:3000"
+      - "${FRONTEND_PORT:-3000}:3000"
     depends_on:
       strapi:
         condition: service_healthy
