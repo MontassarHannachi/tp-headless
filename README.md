@@ -110,7 +110,6 @@ docker compose logs -f
 ```
 
 ## Access the applications
-The Strapi administration account must be created through the initial setup interface.
 
 | Service | URL |
 |---|---|
@@ -118,6 +117,7 @@ The Strapi administration account must be created through the initial setup inte
 | Strapi Admin Panel | http://localhost:1337/admin |
 | Strapi Health Check | http://localhost:1337/_health |
 
+The Strapi administration account must be created through the initial setup interface.
 
 ## Screenshots
 
