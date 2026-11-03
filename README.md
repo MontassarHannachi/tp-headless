@@ -116,13 +116,14 @@ docker compose logs -f
 | Next.js Frontend | http://localhost:3000 |
 | Strapi Admin Panel | http://localhost:1337/admin |
 | Strapi Health Check | http://localhost:1337/_health |
+
+The Strapi administration account must be created through the initial setup interface.
+
 ## Screenshots
 
 ### Strapi Administration Dashboard
 
 ![Strapi Admin Dashboard](captures/vitrine.png)
-The Strapi administration account must be created through the initial setup interface.
-
 ## Docker Configuration
 
 ### Backend
