@@ -29,7 +29,7 @@ Docker Compose orchestrates both services and manages their startup dependencies
                       |
                 SQLite Database
                       |
-                Persistent Volume
+                Host Bind Mounts
 ```
 
 ## Technologies
