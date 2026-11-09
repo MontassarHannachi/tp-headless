@@ -1,418 +1,30 @@
 # Headless Commerce
-### Modern E-commerce Platform · Strapi 5 × Next.js 16
+### Plateforme e-commerce moderne · Strapi 5 × Next.js 16
 
 <p align="center">
   <img src="https://img.shields.io/badge/Next.js-16-black?logo=next.js" alt="Next.js"/>
   <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react" alt="React"/>
   <img src="https://img.shields.io/badge/TypeScript-blue?logo=typescript" alt="TypeScript"/>
   <img src="https://img.shields.io/badge/Strapi-5-4945FF?logo=strapi" alt="Strapi"/>
-  <img src="https://img.shields.io/badge/Docker-Containerized-2496ED?logo=docker" alt="Docker"/>
-  <img src="https://img.shields.io/badge/Nginx-Reverse%20Proxy-009639?logo=nginx" alt="Nginx"/>
+  <img src="https://img.shields.io/badge/Docker-Conteneurisé-2496ED?logo=docker" alt="Docker"/>
+  <img src="https://img.shields.io/badge/Nginx-Proxy%20inverse-009639?logo=nginx" alt="Nginx"/>
 </p>
 
 <p align="center">
-  A full-stack headless e-commerce application built with Next.js and Strapi, containerized with Docker and secured with local HTTPS.
-</p>
-
-<p align="center">
-  <a href="#english">English</a> ·
-  <a href="#français">Français</a>
+  Application e-commerce Full-Stack basée sur une architecture Headless, développée avec Next.js et Strapi, conteneurisée avec Docker et sécurisée par HTTPS.
 </p>
 
 ---
-
-# English
-
-## 1. Project Overview
-
-**Headless Commerce** is a full-stack e-commerce application developed using a headless architecture.
-
-The project separates the frontend presentation layer from the backend content and product management system.
-
-The frontend is built with Next.js, while Strapi provides the backend API and content management capabilities.
-
-The application is containerized with Docker Compose and exposed through an Nginx reverse proxy using HTTPS for secure access on a local network.
-
-## 2. Screenshots
-
-### Homepage
-
-![Homepage](docs/captures/vitrine.png)
-
-### Product Details
-
-![Product Details](docs/captures/produit.png)
-
-### Shopping Cart
-
-![Shopping Cart](docs/captures/panier.png)
-
-### Checkout
-
-![Checkout](docs/captures/commande.png)
-
-## 3. Main Features
-
-### Frontend
-- Responsive e-commerce interface.
-- Product catalog and product details.
-- Product images and descriptions.
-- Shopping cart management.
-- Checkout form.
-- Contact form.
-- Informational and trust pages.
-
-### Backend
-- Strapi 5 headless CMS.
-- REST API for product and content management.
-- Order creation and management.
-- Contact form processing.
-- Server-side price calculation.
-- Request validation.
-- Idempotent order creation to prevent duplicate submissions.
-
-### Infrastructure and Security
-- Docker Compose multi-container architecture.
-- Nginx reverse proxy.
-- Local HTTPS using mkcert.
-- HTTP to HTTPS redirection.
-- Security-related HTTP response headers.
-- Persistent SQLite database.
-- Protected backend API routes using a shared server-side secret.
-
-## 4. Technology Stack
-
-| Technology | Purpose |
-|---|---|
-| Next.js 16 | Frontend application |
-| React 19 | User interface |
-| TypeScript | Type-safe development |
-| Strapi 5 | Headless CMS and backend API |
-| SQLite | Database |
-| Docker | Containerization |
-| Docker Compose | Service orchestration |
-| Nginx | Reverse proxy and HTTPS |
-| mkcert | Local TLS certificates |
-| Ubuntu | Deployment environment |
-
-## 5. Architecture
-
-```text
-                 User Browser
-                      |
-                      | HTTPS :443
-                      v
-                +-----------+
-                |   Nginx   |
-                |  Reverse  |
-                |   Proxy   |
-                +-----------+
-                      |
-                      | HTTP
-                      v
-                +-----------+
-                |  Next.js  |
-                | Frontend  |
-                +-----------+
-                      |
-                      | Internal HTTP
-                      v
-                +-----------+
-                |  Strapi   |
-                | Backend   |
-                +-----------+
-                      |
-                      v
-                +-----------+
-                |  SQLite   |
-                | Database  |
-                +-----------+
-```
-
-### Network Configuration
-
-| Service | Internal Port | Access |
-|---|---:|---|
-| Nginx | 80 / 443 | Local network |
-| Next.js | 3000 | Docker network |
-| Strapi | 1337 | Localhost / Docker network |
-| SQLite | — | Persistent local storage |
-
-Nginx is the main entry point for browser traffic. HTTPS terminates at Nginx, which forwards requests to the frontend.
-
-The frontend communicates with Strapi through the internal Docker network.
-
-## 6. API Routes
-
-The Next.js application provides server-side API routes for sensitive operations.
-
-| Endpoint | Method | Description |
-|---|---|---|
-| `/api/checkout` | POST | Creates an order |
-| `/api/contact` | POST | Processes contact form submissions |
-| `/api/media/[...path]` | GET | Proxies media requests |
-
-The checkout implementation validates requests and calculates order prices on the server side.
-
-Idempotency keys are used to prevent duplicate order creation when the same request is submitted more than once.
-
-## 7. Project Structure
-
-```text
-tp-headless/
-│
-├── backend-accessoires/
-│   ├── config/
-│   ├── src/
-│   ├── public/
-│   └── .tmp/
-│
-├── frontend-vitrine/
-│   ├── app/
-│   │   ├── api/
-│   │   ├── components/
-│   │   └── ...
-│   ├── public/
-│   └── package.json
-│
-├── docs/
-│   └── captures/
-│       ├── vitrine.png
-│       ├── produit.png
-│       ├── panier.png
-│       └── commande.png
-│
-├── nginx/
-│   └── default.conf
-│
-├── certs/
-│
-├── docker-compose.yml
-├── .env
-├── .gitignore
-└── README.md
-```
-
-Sensitive environment files and TLS private keys must not be committed to Git.
-
-## 8. Installation and Deployment
-
-### Prerequisites
-
-- Ubuntu Linux
-- Docker Engine
-- Docker Compose plugin
-- Git
-- mkcert
-
-### Clone the repository
-
-```bash
-git clone https://github.com/MontassarHannachi/tp-headless.git
-
-cd tp-headless
-```
-
-### Configure environment variables
-
-Create the root `.env` file:
-
-```env
-NEXT_PUBLIC_API_URL=https://YOUR_HOST_IP
-STORE_API_SECRET=YOUR_GENERATED_SECRET
-```
-
-Configure the backend environment in `backend-accessoires/.env` using the variables required by the Strapi application.
-
-**Important:** Never reuse the example values in a real deployment. Do not commit `.env` files or secrets.
-
-### Generate local HTTPS certificates
-
-Install mkcert and initialize its local certificate authority:
-
-```bash
-sudo apt install mkcert
-
-mkcert -install
-```
-
-Generate a certificate for your Ubuntu machine's LAN IP:
-
-```bash
-mkdir -p certs
-
-mkcert \
-  -cert-file certs/local-cert.pem \
-  -key-file certs/local-key.pem \
-  YOUR_HOST_IP
-```
-
-Protect the private key:
-
-```bash
-chmod 600 certs/local-key.pem
-```
-
-Install the generated public root CA certificate on client devices that need to trust the local HTTPS connection.
-
-### Build and start the containers
-
-```bash
-docker compose up -d --build
-```
-
-Check service status:
-
-```bash
-docker compose ps
-```
-
-View logs:
-
-```bash
-docker compose logs -f
-```
-
-## 9. Access the Application
-
-Open the following address in a browser:
-
-```text
-https://YOUR_HOST_IP
-```
-
-HTTP requests are redirected to HTTPS.
-
-### Strapi Administration
-
-The Strapi service is not directly exposed to the local network.
-
-For administrative access, create an SSH tunnel from a trusted client:
-
-```bash
-ssh -L 1337:127.0.0.1:1337 USER@YOUR_HOST_IP
-```
-
-Then open:
-
-```text
-http://localhost:1337/admin
-```
-
-## 10. Data Persistence
-
-Docker volumes and bind mounts preserve application data outside the container lifecycle.
-
-The SQLite database is stored in:
-
-```text
-backend-accessoires/.tmp/data.db
-```
-
-Uploaded media files are stored in:
-
-```text
-backend-accessoires/public/uploads/
-```
-
-Rebuilding containers does not require deleting these persistent directories.
-
-## 11. Useful Docker Commands
-
-Start services:
-
-```bash
-docker compose up -d
-```
-
-Rebuild services:
-
-```bash
-docker compose up -d --build
-```
-
-Stop services:
-
-```bash
-docker compose down
-```
-
-View running containers:
-
-```bash
-docker compose ps
-```
-
-Follow logs:
-
-```bash
-docker compose logs -f
-```
-
-Restart services:
-
-```bash
-docker compose restart
-```
-
-## 12. Security Considerations
-
-The project includes several security measures:
-
-- HTTPS through Nginx.
-- HTTP to HTTPS redirection.
-- TLS 1.2 and TLS 1.3.
-- Security response headers.
-- Backend service isolation.
-- Server-side validation of checkout requests.
-- Server-side price calculation.
-- Protected internal API operations.
-- Idempotency protection against duplicate order submissions.
-- Environment-based secret configuration.
-
-**Deployment note:** mkcert certificates are intended for development and trusted local networks. They are not publicly trusted certificates. A public production deployment requires a valid public certificate, domain configuration, hardened infrastructure and additional security controls.
-
-## 13. Future Improvements
-
-Possible next development steps:
-
-- Online payment gateway integration.
-- Automated testing.
-- Product search and advanced filtering.
-- Customer authentication and account management.
-- Order tracking.
-- Production deployment with a public domain.
-- Automated backups and monitoring.
-- CI/CD pipeline.
-
-## 14. Learning Outcomes
-
-This project provides practical experience with:
-
-- Headless CMS architecture.
-- Full-stack development.
-- REST API integration.
-- Next.js and Strapi communication.
-- Docker containerization.
-- Reverse proxy configuration.
-- HTTPS and TLS certificates.
-- Environment variable management.
-- Backend validation and API security.
-- Persistent application storage.
-
----
-
-# Français
 
 ## 1. Présentation du projet
 
-**Headless Commerce** est une application e-commerce full-stack développée avec une architecture headless.
+**Headless Commerce** est une application e-commerce Full-Stack développée autour d'une architecture Headless CMS.
 
-Le projet sépare la partie frontend, responsable de l'affichage et de l'expérience utilisateur, du backend qui gère les produits, les contenus et les opérations métier.
+Le projet repose sur une séparation entre le frontend, responsable de l'affichage et de l'expérience utilisateur, et le backend, chargé de la gestion des produits, des contenus et des opérations métier.
 
-Le frontend utilise Next.js et le backend repose sur Strapi 5.
+Le frontend est développé avec **Next.js 16**, tandis que **Strapi 5** assure la gestion du contenu et expose les API nécessaires au fonctionnement de l'application.
 
-L'ensemble est conteneurisé avec Docker Compose et accessible via un reverse proxy Nginx configuré en HTTPS pour une utilisation sur un réseau local.
+L'ensemble de l'environnement est conteneurisé avec Docker Compose et accessible via un reverse proxy Nginx configuré en HTTPS pour une utilisation sur un réseau local.
 
 ## 2. Captures d'écran
 
@@ -434,7 +46,7 @@ L'ensemble est conteneurisé avec Docker Compose et accessible via un reverse pr
 
 ## 3. Fonctionnalités principales
 
-### Frontend
+### Interface utilisateur
 - Interface e-commerce responsive.
 - Catalogue de produits.
 - Pages détaillées des produits.
@@ -444,9 +56,9 @@ L'ensemble est conteneurisé avec Docker Compose et accessible via un reverse pr
 - Formulaire de contact.
 - Pages informatives et de confiance.
 
-### Backend
-- CMS headless Strapi 5.
-- API REST pour les produits et les contenus.
+### Backend et gestion des données
+- CMS Headless Strapi 5.
+- API REST pour la gestion des produits et des contenus.
 - Création et gestion des commandes.
 - Traitement des formulaires de contact.
 - Calcul des prix côté serveur.
@@ -457,87 +69,91 @@ L'ensemble est conteneurisé avec Docker Compose et accessible via un reverse pr
 - Architecture multi-conteneurs avec Docker Compose.
 - Reverse proxy Nginx.
 - HTTPS local avec mkcert.
-- Redirection HTTP vers HTTPS.
+- Redirection automatique HTTP vers HTTPS.
 - En-têtes HTTP de sécurité.
-- Persistance des données SQLite.
-- Protection des routes API sensibles avec un secret côté serveur.
+- Persistance des données avec SQLite.
+- Protection des opérations API sensibles par un secret côté serveur.
 
 ## 4. Technologies utilisées
 
 | Technologie | Utilisation |
 |---|---|
-| Next.js 16 | Application frontend |
+| Next.js 16 | Développement du frontend |
 | React 19 | Interface utilisateur |
 | TypeScript | Développement typé |
-| Strapi 5 | CMS headless et backend |
+| Strapi 5 | CMS Headless et backend |
 | SQLite | Base de données |
 | Docker | Conteneurisation |
-| Docker Compose | Orchestration |
-| Nginx | Reverse proxy et HTTPS |
-| mkcert | Certificats TLS locaux |
+| Docker Compose | Orchestration des services |
+| Nginx | Reverse proxy et gestion HTTPS |
+| mkcert | Génération de certificats TLS locaux |
 | Ubuntu | Environnement de déploiement |
 
 ## 5. Architecture technique
 
 ```text
-                Navigateur utilisateur
-                         |
-                         | HTTPS :443
-                         v
-                   +-----------+
-                   |   Nginx   |
-                   |  Reverse  |
-                   |   Proxy   |
-                   +-----------+
-                         |
-                         | HTTP
-                         v
-                   +-----------+
-                   |  Next.js  |
-                   | Frontend  |
-                   +-----------+
-                         |
-                         | HTTP interne
-                         v
-                   +-----------+
-                   |  Strapi   |
-                   | Backend   |
-                   +-----------+
-                         |
-                         v
-                   +-----------+
-                   |  SQLite   |
-                   | Base de   |
-                   | données   |
-                   +-----------+
+                 Navigateur utilisateur
+                          |
+                          | HTTPS :443
+                          v
+                    +-----------+
+                    |   Nginx   |
+                    |  Reverse  |
+                    |   Proxy   |
+                    +-----------+
+                          |
+                          | HTTP
+                          v
+                    +-----------+
+                    |  Next.js  |
+                    | Frontend  |
+                    +-----------+
+                          |
+                          | HTTP interne
+                          v
+                    +-----------+
+                    |  Strapi   |
+                    | Backend   |
+                    +-----------+
+                          |
+                          v
+                    +-----------+
+                    |  SQLite   |
+                    | Base de   |
+                    | données   |
+                    +-----------+
 ```
 
 ### Configuration réseau
 
-| Service | Port interne | Accès |
+| Service | Port | Accès |
 |---|---:|---|
 | Nginx | 80 / 443 | Réseau local |
-| Next.js | 3000 | Réseau Docker |
-| Strapi | 1337 | Localhost / réseau Docker |
+| Next.js | 3000 | Réseau Docker interne |
+| Strapi | 1337 | Localhost et réseau Docker |
 | SQLite | — | Stockage persistant |
 
-Nginx constitue le point d'entrée des requêtes du navigateur. Le chiffrement HTTPS est terminé au niveau de Nginx, qui transmet ensuite les requêtes au frontend.
+Nginx constitue le point d'entrée des requêtes provenant du navigateur.
+
+La connexion HTTPS est terminée au niveau de Nginx, qui transmet ensuite les requêtes au frontend Next.js.
 
 Le frontend communique avec Strapi à travers le réseau interne Docker.
 
 ## 6. Routes API
 
-L'application Next.js fournit des routes API côté serveur pour les opérations sensibles.
+L'application Next.js utilise des routes API côté serveur pour gérer certaines opérations sensibles.
 
 | Endpoint | Méthode | Description |
 |---|---|---|
 | `/api/checkout` | POST | Création d'une commande |
 | `/api/contact` | POST | Traitement du formulaire de contact |
-| `/api/media/[...path]` | GET | Proxy des médias |
+| `/api/media/[...path]` | GET | Proxy des fichiers médias |
 
-Le processus de commande valide les requêtes et calcule les prix côté serveur.
-
-Des clés d'idempotence empêchent la création de commandes en double lorsqu'une même requête est envoyée plusieurs fois.
+Le processus de commande comprend :
+- La validation des données reçues.
+- Le calcul des prix côté serveur.
+- La vérification de la requête.
+- La protection contre les soumissions répétées grâce à une clé d'idempotence.
 
 ## 7. Structure du projet
 
@@ -576,7 +192,7 @@ tp-headless/
 └── README.md
 ```
 
-Les fichiers d'environnement sensibles et les clés privées TLS ne doivent jamais être publiés sur Git.
+Les fichiers d'environnement contenant des informations sensibles et les clés privées TLS ne doivent jamais être publiés sur GitHub.
 
 ## 8. Installation et déploiement
 
@@ -588,7 +204,7 @@ Les fichiers d'environnement sensibles et les clés privées TLS ne doivent jama
 - Git.
 - mkcert.
 
-### Cloner le dépôt
+### Cloner le dépôt GitHub
 
 ```bash
 git clone https://github.com/MontassarHannachi/tp-headless.git
@@ -596,34 +212,42 @@ git clone https://github.com/MontassarHannachi/tp-headless.git
 cd tp-headless
 ```
 
-### Configurer les variables d'environnement
+### Configuration des variables d'environnement
 
-Créer le fichier `.env` à la racine :
+Créer le fichier `.env` à la racine du projet :
 
 ```env
 NEXT_PUBLIC_API_URL=https://YOUR_HOST_IP
 STORE_API_SECRET=YOUR_GENERATED_SECRET
 ```
 
-Configurer également `backend-accessoires/.env` avec les variables nécessaires au fonctionnement de Strapi.
+Configurer également le fichier `backend-accessoires/.env` avec les variables nécessaires au fonctionnement de Strapi.
 
-**Important :** remplacer les valeurs d'exemple par des valeurs adaptées à son environnement. Ne jamais publier les fichiers `.env` ni les secrets.
+**Important :** les valeurs ci-dessus sont des exemples. Il faut utiliser ses propres paramètres et ne jamais publier les fichiers `.env` contenant des secrets.
 
-### Générer les certificats HTTPS locaux
+### Génération des certificats HTTPS locaux
 
-Installer mkcert et initialiser son autorité de certification locale :
+Installer mkcert :
 
 ```bash
 sudo apt install mkcert
+```
 
+Initialiser l'autorité de certification locale :
+
+```bash
 mkcert -install
+```
+
+Créer le dossier des certificats :
+
+```bash
+mkdir -p certs
 ```
 
 Générer un certificat pour l'adresse IP locale de la machine Ubuntu :
 
 ```bash
-mkdir -p certs
-
 mkcert \
   -cert-file certs/local-cert.pem \
   -key-file certs/local-key.pem \
@@ -636,15 +260,17 @@ Protéger la clé privée :
 chmod 600 certs/local-key.pem
 ```
 
-Installer le certificat racine public sur les appareils clients qui doivent faire confiance à la connexion HTTPS locale.
+Le certificat racine public doit être installé sur les appareils clients qui doivent faire confiance à la connexion HTTPS locale.
 
-### Construire et démarrer les conteneurs
+### Construction et démarrage des conteneurs
+
+Construire et démarrer les services :
 
 ```bash
 docker compose up -d --build
 ```
 
-Vérifier l'état des services :
+Vérifier l'état des conteneurs :
 
 ```bash
 docker compose ps
@@ -658,7 +284,7 @@ docker compose logs -f
 
 ## 9. Accès à l'application
 
-Ouvrir dans le navigateur :
+Depuis un navigateur connecté au réseau local, accéder à :
 
 ```text
 https://YOUR_HOST_IP
@@ -666,17 +292,17 @@ https://YOUR_HOST_IP
 
 Les requêtes HTTP sont automatiquement redirigées vers HTTPS.
 
-### Administration Strapi
+### Accès à l'administration Strapi
 
 Le service Strapi n'est pas directement exposé au réseau local.
 
-Pour accéder à l'administration depuis un poste autorisé, créer un tunnel SSH :
+Pour accéder à son interface d'administration depuis un poste autorisé, créer un tunnel SSH :
 
 ```bash
 ssh -L 1337:127.0.0.1:1337 USER@YOUR_HOST_IP
 ```
 
-Puis ouvrir :
+Puis ouvrir dans le navigateur :
 
 ```text
 http://localhost:1337/admin
@@ -684,18 +310,128 @@ http://localhost:1337/admin
 
 ## 10. Persistance des données
 
-Les volumes et montages Docker permettent de conserver les données en dehors du cycle de vie des conteneurs.
+Les montages Docker permettent de conserver les données en dehors du cycle de vie des conteneurs.
 
-La base SQLite se trouve dans :
+La base de données SQLite est stockée dans :
 
 ```text
 backend-accessoires/.tmp/data.db
 ```
 
-Les fichiers médias téléversés sont stockés dans :
+Les fichiers médias téléversés sont conservés dans :
 
 ```text
 backend-accessoires/public/uploads/
 ```
 
-La reconstruction des conteneurs ne nécessite pas la suppression de
+La reconstruction des conteneurs ne nécessite pas la suppression de ces répertoires persistants.
+
+## 11. Commandes Docker utiles
+
+Démarrer les services :
+
+```bash
+docker compose up -d
+```
+
+Reconstruire les services :
+
+```bash
+docker compose up -d --build
+```
+
+Arrêter les services :
+
+```bash
+docker compose down
+```
+
+Afficher les conteneurs actifs :
+
+```bash
+docker compose ps
+```
+
+Consulter les journaux :
+
+```bash
+docker compose logs -f
+```
+
+Redémarrer les services :
+
+```bash
+docker compose restart
+```
+
+## 12. Sécurité
+
+Le projet intègre plusieurs mécanismes de sécurité :
+
+- Connexion HTTPS via Nginx.
+- Redirection automatique HTTP vers HTTPS.
+- Utilisation de TLS 1.2 et TLS 1.3.
+- En-têtes HTTP de sécurité.
+- Isolation du backend dans le réseau Docker.
+- Validation des requêtes de commande côté serveur.
+- Calcul des prix côté serveur.
+- Protection des opérations API internes.
+- Protection contre les soumissions de commandes en double.
+- Gestion des secrets par variables d'environnement.
+
+### Limites du déploiement HTTPS
+
+Les certificats générés avec mkcert sont destinés au développement et aux réseaux locaux de confiance.
+
+Ils ne sont pas reconnus publiquement par défaut. Les appareils clients doivent faire confiance à l'autorité de certification locale.
+
+Un déploiement public en production nécessiterait notamment :
+- Un nom de domaine.
+- Un certificat TLS reconnu publiquement.
+- Une configuration réseau adaptée.
+- Des sauvegardes régulières.
+- Une supervision et des mesures de sécurité supplémentaires.
+
+## 13. Améliorations futures
+
+Plusieurs évolutions peuvent être envisagées :
+
+- Intégration d'une passerelle de paiement en ligne.
+- Mise en place de tests automatisés.
+- Recherche de produits et filtres avancés.
+- Authentification et gestion des comptes clients.
+- Suivi des commandes.
+- Déploiement en production avec un domaine public.
+- Sauvegardes automatiques et supervision.
+- Mise en place d'un pipeline CI/CD.
+
+## 14. Compétences développées
+
+Ce projet permet de mettre en pratique plusieurs compétences techniques :
+
+- Architecture Headless CMS.
+- Développement Full-Stack.
+- Intégration d'API REST.
+- Communication entre Next.js et Strapi.
+- Conteneurisation avec Docker.
+- Orchestration avec Docker Compose.
+- Configuration d'un reverse proxy Nginx.
+- Gestion des certificats HTTPS et TLS.
+- Gestion des variables d'environnement.
+- Validation backend et sécurité API.
+- Persistance des données applicatives.
+
+---
+
+## Auteur
+
+**Montassar Hannachi**
+
+- GitHub : [MontassarHannachi](https://github.com/MontassarHannachi)
+- Dépôt du projet : [tp-headless](https://github.com/MontassarHannachi/tp-headless)
+
+---
+
+<p align="center">
+  Développé avec Next.js, Strapi, Docker et Nginx.
+</p>
