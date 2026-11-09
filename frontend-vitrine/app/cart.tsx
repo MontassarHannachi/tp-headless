@@ -27,7 +27,7 @@ const KEY = "tp-cart";
 const API = process.env.NEXT_PUBLIC_API_URL;
 const eur = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
 
-function useCart() {
+export function useCart() {
   const ctx = useContext(CartContext);
   if (!ctx) throw new Error("useCart doit être utilisé dans CartProvider");
   return ctx;
@@ -106,7 +106,7 @@ export function CartButton() {
           setOpen(true);
         }}
         aria-label="Ouvrir le panier"
-        className="fixed right-4 top-4 z-40 flex items-center gap-2 rounded-full bg-white/95 px-4 py-2 font-semibold text-indigo-700 shadow-lg ring-1 ring-slate-200 backdrop-blur transition hover:scale-105 dark:bg-slate-900/95 dark:text-indigo-300 dark:ring-slate-700"
+        className="relative flex items-center gap-2 rounded-full bg-white/95 px-4 py-2 font-semibold text-indigo-700 shadow-lg ring-1 ring-slate-200 backdrop-blur transition hover:scale-105 dark:bg-slate-900/95 dark:text-indigo-300 dark:ring-slate-700"
       >
         🛒
         <span className="min-w-6 rounded-full bg-indigo-600 px-2 py-0.5 text-center text-xs text-white">
@@ -182,16 +182,7 @@ export function CartButton() {
                   <span>Total</span>
                   <span>{eur.format(total)}</span>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    clear();
-                    setOrdered(true);
-                  }}
-                  className="w-full rounded-full bg-indigo-600 px-6 py-3 font-semibold text-white transition hover:bg-indigo-700"
-                >
-                  Commander
-                </button>
+                <a href="/commande" onClick={() => setOpen(false)} className="block text-center w-full rounded-full bg-indigo-600 px-6 py-3 font-semibold text-white transition hover:bg-indigo-700">Commander</a>
                 <button
                   type="button"
                   onClick={clear}
