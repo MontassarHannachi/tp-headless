@@ -9,8 +9,9 @@ services:
       PORT: "1337"
       DATABASE_CLIENT: sqlite
       DATABASE_FILENAME: .tmp/data.db
+      STORE_API_SECRET: ${STORE_API_SECRET}
     ports:
-      - "1337:1337"
+      - "127.0.0.1:1337:1337"
     volumes:
       - ./backend-accessoires/.tmp:/app/.tmp
       - ./backend-accessoires/public/uploads:/app/public/uploads
@@ -31,9 +32,21 @@ services:
     container_name: frontend
     environment:
       API_INTERNAL_URL: http://strapi:1337
-    ports:
-      - "${FRONTEND_PORT:-3000}:3000"
+      STORE_API_SECRET: ${STORE_API_SECRET}
     depends_on:
       strapi:
         condition: service_healthy
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    ports:
+      - "192.168.213.129:80:80"
+      - "192.168.213.129:443:443"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+    depends_on:
+      - frontend
     restart: unless-stopped

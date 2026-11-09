@@ -10,3 +10,9 @@ backend-accessoires/public/uploads/*
 !backend-accessoires/public/uploads/.gitkeep
 *.log
 Capture d*.png
+# Certificats HTTPS locaux
+certs/
+
+# Fichiers de sauvegarde locaux
+*.backup
+docker-compose.before-https.yml

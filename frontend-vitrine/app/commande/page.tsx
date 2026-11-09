@@ -2,8 +2,13 @@
 
 import { useState, type FormEvent } from "react";
 import { useCart } from "../cart";
+import { mediaUrl } from "../media-url";
 
-const eur = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
+const eur = new Intl.NumberFormat("fr-FR", {
+  style: "currency",
+  currency: "EUR",
+});
+
 const API = process.env.NEXT_PUBLIC_API_URL;
 
 const FIELDS = [
@@ -14,26 +19,176 @@ const FIELDS = [
   { name: "cp", label: "Code postal", type: "text", auto: "postal-code" },
 ];
 
+type SavedOrder = {
+  number: string;
+  total: number;
+};
+
+const CHECKOUT_STORAGE_KEY = "tp-checkout-idempotency";
+
+function makePayloadSignature(payload: unknown): string {
+  const input = JSON.stringify(payload);
+  let hash = 2166136261;
+
+  for (let i = 0; i < input.length; i++) {
+    hash ^= input.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+
+  return `${input.length}-${(hash >>> 0).toString(16)}`;
+}
+
+function createIdempotencyKey(): string {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+
+  return `checkout-${Date.now()}-${Math.random()
+    .toString(36)
+    .slice(2)}-${Math.random().toString(36).slice(2)}`;
+}
+
+function getIdempotencyKey(signature: string): string {
+  try {
+    const saved = sessionStorage.getItem(CHECKOUT_STORAGE_KEY);
+
+    if (saved) {
+      const parsed = JSON.parse(saved);
+
+      if (
+        parsed.signature === signature &&
+        typeof parsed.key === "string"
+      ) {
+        return parsed.key;
+      }
+    }
+
+    const key = createIdempotencyKey();
+
+    sessionStorage.setItem(
+      CHECKOUT_STORAGE_KEY,
+      JSON.stringify({ signature, key })
+    );
+
+    return key;
+  } catch {
+    return createIdempotencyKey();
+  }
+}
+
 export default function Commande() {
   const { items, total, clear } = useCart();
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [order, setOrder] = useState<string | null>(null);
+  const [order, setOrder] = useState<SavedOrder | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
-  function submit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const f = new FormData(e.currentTarget);
-    const v = (k: string) => String(f.get(k) ?? "").trim();
-    const err: Record<string, string> = {};
-    if (v("nom").length < 2) err.nom = "Indiquez votre nom.";
-    if (!/^\S+@\S+\.\S+$/.test(v("email"))) err.email = "Adresse email invalide.";
-    if (v("adresse").length < 5) err.adresse = "Indiquez votre adresse.";
-    if (v("ville").length < 2) err.ville = "Indiquez votre ville.";
-    if (!/^\d{4,5}$/.test(v("cp"))) err.cp = "Code postal invalide (4 ou 5 chiffres).";
-    setErrors(err);
-    if (Object.keys(err).length > 0) return;
-    setOrder("CMD-" + Date.now().toString(36).toUpperCase());
-    clear();
+
+async function submit(e: FormEvent<HTMLFormElement>) {
+  e.preventDefault();
+
+  if (submitting) return;
+
+  const form = e.currentTarget;
+  const f = new FormData(form);
+  const v = (k: string) => String(f.get(k) ?? "").trim();
+
+  const err: Record<string, string> = {};
+
+  if (v("nom").length < 2) err.nom = "Indiquez votre nom.";
+  if (!/^\S+@\S+\.\S+$/.test(v("email"))) {
+    err.email = "Adresse email invalide.";
   }
+  if (v("adresse").length < 5) err.adresse = "Indiquez votre adresse.";
+  if (v("ville").length < 2) err.ville = "Indiquez votre ville.";
+
+  if (!/^\d{4,5}$/.test(v("cp"))) {
+    err.cp = "Code postal invalide (4 ou 5 chiffres).";
+    }
+
+
+  setErrors(err);
+  setSubmitError("");
+
+  if (Object.keys(err).length > 0) return;
+  if (items.length === 0) return;
+
+  const payload = {
+    customer: {
+      name: v("nom"),
+      email: v("email"),
+      address: v("adresse"),
+      city: v("ville"),
+      postalCode: v("cp"),
+    },
+    items: items.map((item) => ({
+      productDocumentId: item.id,
+      quantity: item.qty,
+    })),
+  };
+
+  const signature = makePayloadSignature(payload);
+  const idempotencyKey = getIdempotencyKey(signature);
+
+  setSubmitting(true);
+
+  try {
+    const response = await fetch("/api/checkout", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ...payload,
+        idempotencyKey,
+      }),
+    });
+
+    const result = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      throw new Error(
+        result?.error?.message ||
+        result?.message ||
+        "La commande n'a pas pu être enregistrée. Réessayez."
+      );
+    }
+
+    const saved = result?.data;
+
+    if (
+      typeof saved?.orderNumber !== "string" ||
+      !Number.isFinite(Number(saved?.total))
+    ) {
+      throw new Error(
+        "Réponse invalide du serveur. Vérifiez vos commandes avant de réessayer."
+      );
+    }
+
+    setOrder({
+      number: saved.orderNumber,
+      total: Number(saved.total),
+    });
+
+    try {
+      sessionStorage.removeItem(CHECKOUT_STORAGE_KEY);
+    } catch {
+      // Le stockage peut être indisponible dans certains navigateurs.
+    }
+
+    clear();
+  } catch (error) {
+    setSubmitError(
+      error instanceof Error
+        ? error.message
+        : "Une erreur inattendue est survenue."
+    );
+  } finally {
+    setSubmitting(false);
+  }
+}
+
+
 
   if (order) {
     return (
@@ -43,7 +198,13 @@ export default function Commande() {
           Merci pour votre commande !
         </h1>
         <p className="mt-2 text-slate-600 dark:text-slate-300">
-          Numéro de commande : <strong>{order}</strong> (commande simulée).
+          Votre commande a bien été enregistrée.
+        </p>
+        <p className="mt-2 text-slate-600 dark:text-slate-300">
+          Numéro de commande : <strong>{order.number}</strong>
+        </p>
+        <p className="mt-2 text-slate-600 dark:text-slate-300">
+          Total confirmé : <strong>{eur.format(order.total)}</strong>
         </p>
         <a
           href="/"
@@ -104,30 +265,48 @@ export default function Commande() {
                 )}
               </div>
             ))}
+
+            {submitError && (
+              <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
+                {submitError}
+              </p>
+            )}
+
             <button
               type="submit"
-              className="w-full rounded-full bg-indigo-600 px-6 py-3 font-semibold text-white transition hover:bg-indigo-700 active:scale-95"
+              disabled={submitting}
+              className="w-full rounded-full bg-indigo-600 px-6 py-3 font-semibold text-white transition hover:bg-indigo-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Confirmer la commande · {eur.format(total)}
+              {submitting
+                ? "Enregistrement en cours..."
+                : `Confirmer la commande · ${eur.format(total)}`}
             </button>
           </form>
 
           <aside className="h-fit rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Récapitulatif</h2>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+              Récapitulatif
+            </h2>
             <ul className="mt-4 space-y-4">
               {items.map((i) => (
                 <li key={i.id} className="flex items-center gap-4">
                   <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-800">
                     {i.image && (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={`${API}${i.image}`} alt={i.title} className="h-full w-full object-cover" />
+                      <img
+                        src={mediaUrl(i.image)}
+                        alt={i.title}
+                        className="h-full w-full object-cover"
+                      />
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
                       {i.title}
                     </p>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Quantité : {i.qty}</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                      Quantité : {i.qty}
+                    </p>
                   </div>
                   <span className="text-sm font-bold text-indigo-700 dark:text-indigo-300">
                     {eur.format(i.price * i.qty)}
