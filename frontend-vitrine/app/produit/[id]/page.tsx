@@ -1,3 +1,4 @@
+import { AddToCart } from "../../cart";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 
@@ -122,6 +123,7 @@ export default async function ProductPage({
             <p className="mt-6 whitespace-pre-line text-slate-600 dark:text-slate-300">
               {description || "Aucune description disponible pour ce produit."}
             </p>
+            <AddToCart item={{ id: p.documentId, title: p.title, price: p.price, image: p.image?.url ?? null }} />
             <ul className="mt-8 space-y-2 text-sm text-slate-600 dark:text-slate-300">
               {PERKS.map((x) => (
                 <li key={x.text} className="flex items-center gap-3">
