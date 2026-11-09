@@ -25,8 +25,16 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             </div>
           </header>
           {children}
-          <footer className="border-t border-slate-200 bg-white py-8 text-center text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
-            © {new Date().getFullYear()} Boutique d&apos;Accessoires · Strapi, Next.js et Docker
+          <footer className="border-t border-slate-200 bg-white py-10 dark:border-slate-800 dark:bg-slate-900">
+            <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-6 text-sm text-slate-500 dark:text-slate-400">
+              <nav aria-label="Pied de page" className="flex flex-wrap justify-center gap-x-6 gap-y-2">
+                <a href="/a-propos" className="hover:text-indigo-600 hover:underline dark:hover:text-indigo-400">À propos</a>
+                <a href="/livraison-retours" className="hover:text-indigo-600 hover:underline dark:hover:text-indigo-400">Livraison et retours</a>
+                <a href="/contact" className="hover:text-indigo-600 hover:underline dark:hover:text-indigo-400">Contact</a>
+                <a href="/mentions-legales" className="hover:text-indigo-600 hover:underline dark:hover:text-indigo-400">Mentions légales</a>
+              </nav>
+              <p>© {new Date().getFullYear()} Boutique d&apos;Accessoires · Projet pédagogique</p>
+            </div>
           </footer>
         </CartProvider>
       </body>
