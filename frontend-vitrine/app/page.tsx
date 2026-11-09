@@ -1,5 +1,6 @@
 type Product = {
   id: number;
+  documentId: string;
   title: string;
   price: number;
   image?: { url: string } | null;
@@ -18,10 +19,18 @@ async function getProducts(): Promise<Product[]> {
 
 const eur = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
 
-function href(cat?: string, q?: string) {
+const SORTS: { key: string; label: string }[] = [
+  { key: "", label: "Par défaut" },
+  { key: "prix-asc", label: "Prix croissant" },
+  { key: "prix-desc", label: "Prix décroissant" },
+  { key: "nom", label: "A-Z" },
+];
+
+function href(cat?: string, q?: string, sort?: string) {
   const p = new URLSearchParams();
   if (cat) p.set("cat", cat);
   if (q) p.set("q", q);
+  if (sort) p.set("sort", sort);
   const s = p.toString();
   return s ? `/?${s}` : "/";
 }
@@ -29,20 +38,27 @@ function href(cat?: string, q?: string) {
 export default async function Home({
   searchParams,
 }: {
-  searchParams: Promise<{ cat?: string; q?: string }>;
+  searchParams: Promise<{ cat?: string; q?: string; sort?: string }>;
 }) {
-  const { cat, q } = await searchParams;
+  const { cat, q, sort } = await searchParams;
   const products = await getProducts();
   const categories = Array.from(
     new Set(products.map((p) => p.category?.name).filter(Boolean))
   ) as string[];
 
   const needle = (q ?? "").trim().toLowerCase();
-  const shown = products.filter(
-    (p) =>
-      (!cat || p.category?.name === cat) &&
-      (!needle || p.title.toLowerCase().includes(needle))
-  );
+  const shown = products
+    .filter(
+      (p) =>
+        (!cat || p.category?.name === cat) &&
+        (!needle || p.title.toLowerCase().includes(needle))
+    )
+    .sort((a, b) => {
+      if (sort === "prix-asc") return a.price - b.price;
+      if (sort === "prix-desc") return b.price - a.price;
+      if (sort === "nom") return a.title.localeCompare(b.title, "fr");
+      return 0;
+    });
 
   const pill = (active: boolean) =>
     `rounded-full px-4 py-2 text-sm font-medium transition ${
@@ -62,6 +78,7 @@ export default async function Home({
         </p>
         <form action="/" method="GET" className="mx-auto mt-8 flex max-w-md gap-2">
           {cat && <input type="hidden" name="cat" value={cat} />}
+          {sort && <input type="hidden" name="sort" value={sort} />}
           <input
             type="search"
             name="q"
@@ -79,14 +96,28 @@ export default async function Home({
       </header>
 
       <section className="mx-auto max-w-6xl px-6 py-10">
-        <nav className="mb-8 flex flex-wrap justify-center gap-2">
-          <a href={href(undefined, q)} className={pill(!cat)}>Tous</a>
+        <nav className="mb-6 flex flex-wrap justify-center gap-2">
+          <a href={href(undefined, q, sort)} className={pill(!cat)}>Tous</a>
           {categories.map((c) => (
-            <a key={c} href={href(c, q)} className={pill(cat === c)}>
+            <a key={c} href={href(c, q, sort)} className={pill(cat === c)}>
               {c}
             </a>
           ))}
         </nav>
+
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            {shown.length} produit{shown.length > 1 ? "s" : ""}
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm text-slate-500 dark:text-slate-400">Trier :</span>
+            {SORTS.map((s) => (
+              <a key={s.key} href={href(cat, q, s.key)} className={pill((sort ?? "") === s.key)}>
+                {s.label}
+              </a>
+            ))}
+          </div>
+        </div>
 
         {shown.length === 0 ? (
           <p className="py-16 text-center text-slate-500 dark:text-slate-400">
@@ -95,18 +126,23 @@ export default async function Home({
         ) : (
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {shown.map((p) => (
-              <article
+              <a
                 key={p.id}
+                href={`/produit/${p.documentId}`}
                 className="group overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-1 hover:shadow-xl dark:bg-slate-900 dark:ring-slate-800"
               >
                 <div className="relative h-60 overflow-hidden bg-slate-100 dark:bg-slate-800">
-                  {p.image?.url && (
+                  {p.image?.url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={`${PUBLIC_API}${p.image.url}`}
                       alt={p.title}
                       className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
                     />
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-sm text-slate-400">
+                      Pas d&apos;image
+                    </div>
                   )}
                   {p.category && (
                     <span className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-indigo-700 backdrop-blur dark:bg-slate-900/90 dark:text-indigo-300">
@@ -120,7 +156,7 @@ export default async function Home({
                     {eur.format(p.price)}
                   </span>
                 </div>
-              </article>
+              </a>
             ))}
           </div>
         )}
