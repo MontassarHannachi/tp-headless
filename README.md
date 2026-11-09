@@ -4,6 +4,16 @@ A containerized headless CMS application built with **Strapi 5**, **Next.js 16**
 
 This project demonstrates a decoupled architecture where Strapi manages content through a REST API, while Next.js provides the frontend interface.
 
+## Fonctionnalités
+
+- Catalogue avec recherche, tri, compteur de résultats et mode sombre
+- Fiche produit : fil d'Ariane, produits de la même catégorie, titre d'onglet dynamique
+- Panier persistant (localStorage) : quantités, total, commande simulée
+- Page 404 et squelette de chargement
+- Produits, catégories et images gérés dans Strapi
+
+![Vitrine](docs/captures/vitrine-docker.png)
+
 ## Architecture
 
 The application consists of two independent services:
@@ -53,7 +63,7 @@ tp-headless/
 ├── frontend-vitrine/
 │   ├── Dockerfile
 │   └── ...
-├── captures/
+├── docs/captures/
 ├── docker-compose.yml
 ├── .env.example
 └── .gitignore
@@ -82,6 +92,8 @@ Copy the example configuration:
 
 ```bash
 cp .env.example .env
+cp backend-accessoires/.env.example backend-accessoires/.env
+# Remplacer chaque valeur "changeme" par une valeur aléatoire (openssl rand -base64 32)
 ```
 
 Default configuration:
@@ -123,7 +135,7 @@ The Strapi administration account must be created through the initial setup inte
 
 ### Strapi Administration Dashboard
 
-![Strapi Admin Dashboard](captures/vitrine.png)
+![Strapi Admin Dashboard](docs/captures/vitrine.png)
 ## Docker Configuration
 
 ### Backend
